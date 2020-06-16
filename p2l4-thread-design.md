@@ -63,32 +63,6 @@ Process jumps into UL lib scheduler on
 - adaptive mutexes - with multiple cpus, if critical section is short, we'd better off spinning than block by picking a thread, context switching it and queueing it up on a mutex queue
 - destroying threads - put exited thread on death row and periodically destroy them by reaper thread, then we can reuse the allocations of threads in death row
 
-## Tasks in Linux
-### Task structure
-Task is the execution context of KLT created with `clone(function, stack_ptr, sharing_flags, args)`.
-```
-struct task_struct { 
-    pid_t pid;
-    pid_t tgid;
-    int prio;
-    volatile long stae;
-    struct mm_struct *mm;
-    struct files_struct *files;
-    struct list_head tasks;
-    int on_cpu;
-    cpumask_t cpus_allowed;
-    ...
-}
-```
-
-### Linux threads model
-- older linux uses many-to-many model
-    - UL scheduling-made decisions, mutex and wait queues are invisible to kernel, it could change ULT-KLT mapping
-- current linux uses 1-to-1 model - native posix threads library (NPTL)
-    - unlike many-to-many, now kernel is able to see each ULT info
-    - kernel traps have become cheaper than before
-    - modern platforms support more resources, e.g. memory, large id range
-
 ## Interrupts vs. Signals
 |           |         interrupts        |          signals         |
 |-----------|:-------------------------:|:------------------------:|
@@ -151,13 +125,40 @@ Performance: bottom line
 - ULT mask = 0, KLT mask = 1, another ULT mask = 0, another KLT mask = 1
     - library routine finds no ULT with enabled mask so it requests the KLT to disable its mask
     - when lib reissues the signal for entire process again, OS finds there's another KLT with enabled mask, then this KLT mask will be disabled just like the previous one
-    - repeating this will disable all KLT signal masks
-    - if a ULT mask is enables then, the library will perform a system call to enable a KLT mask
+    - signal remains pending and the previous step will be repeated this and disable all KLT signal masks
+    - until a ULT mask is enabled, the library will perform a system call to enable a KLT mask
 
 #### Common case optimization
 - signals occur much less frequently than signal mask updates
 - updates signal mask just apply to UL mask then system calls to change kernel are avoided 
 - signal handling becomes complex but cheaper
+
+## Tasks in Linux
+![linux-kernel-map](images/linux-kernel-map.svg)
+### Task structure
+Task is the execution context of KLT created with `clone(function, stack_ptr, sharing_flags, args)`.
+```
+struct task_struct { 
+    pid_t pid;
+    pid_t tgid;
+    int prio;
+    volatile long stae;
+    struct mm_struct *mm;
+    struct files_struct *files;
+    struct list_head tasks;
+    int on_cpu;
+    cpumask_t cpus_allowed;
+    ...
+}
+```
+
+### Linux threads model
+- older linux uses many-to-many model
+    - UL scheduling-made decisions, mutex and wait queues are invisible to kernel, it could change ULT-KLT mapping
+- current linux uses 1-to-1 model - native posix threads library (NPTL)
+    - unlike many-to-many, now kernel is able to see each ULT info
+    - kernel traps have become cheaper than before
+    - modern platforms support more resources, e.g. memory, large id range
 
 ## References
 - [Eykholt, J.R., et. al., Beyond Multiprocessing: Multithreading the Sun OS Kernel](papers/ud923-eykholt-paper.pdf)

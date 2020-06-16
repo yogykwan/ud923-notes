@@ -52,7 +52,7 @@ A process can create child process in two ways.
 - fork
     - copy parent PCB into child PCB
     - child continues execution at instruction after fork
-- exec
+- fork followed by exec
     - replace child image
     - load new program and start from first instruction
 
