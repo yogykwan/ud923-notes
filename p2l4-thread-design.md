@@ -10,7 +10,7 @@
 For better scalability, overheads, performance, flexibility, we need to maintain multiple data structures instead of a single PCB.
 ![thread-related-data-structures](images/thread-related-data-structures.png)
 
-### user-level structures in Solaris 2.0
+### User-level structures in Solaris 2.0
 ![sunos5-threading-model](images/sunos5-threading-model.png)
 - not POSIX threads, but similar
 - thread creation
@@ -19,8 +19,9 @@ For better scalability, overheads, performance, flexibility, we need to maintain
 - structure contains execution context, registers, signal mask, priority, stack pointer, thread local storage, stack
 - red zone throws error when a thread stack overwrite other's
 
-### kernel-level structures Solaris 2.0
+### Kernel-level structures Solaris 2.0
 ![solaris2-kernel-structures](images/solaris2-kernel-structures.png)
+
 process
 - kernel-level threads list
 - virtual address space
@@ -96,7 +97,7 @@ When interrupts/signals come, pc points to first instruction in handler, stack p
 
 ### Interrupts as threads
 To avoid deadlock, make interrupt a full fledged thread.
-- dynamic decision - if handler has mutexes turn it into a separate thread, otherwise, execute on interrupted thread's tack
+- dynamic decision - if handler has mutexes turn it into a separate thread, otherwise, execute on interrupted thread's stack
 - optimization - pre-create and pre-initialize a few thread structures for interrupt routines
 
 Top vs. bottom half

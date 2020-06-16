@@ -24,7 +24,7 @@ Threads can improve performance in the following ways
 - efficiency - lower memory requirement, inter-thread communication is cheaper than inter-process
 
 Even if # of threads > # of cpus, multithreading can help hide latency.
-- shared virtual mapping means t_ctx switch of threads is smaller than t_ctx_switch of processes
+- shared virtual mapping means t_ctx_switch of threads is smaller than t_ctx_switch of processes
 - as long as t_idle is bigger than twice the t_ctx_switch, context switch can hide idling time
 - especially useful to hide more of latency of i/o operations
 
@@ -197,7 +197,10 @@ Lock(mutex) {
 - signal correct condition
 - don't use signal when broadcast is needed
 - signal/broadcast condition variables after unlock to avoid spurious wake-ups
-- maintain lock order to prevent deadlock, the cycles in wait graph
+- prevent deadlock, the cycles in wait graph
+    - maintain lock order - most accepted
+    - fine-grained locking means unlocking a mutex before locking another - not work when variables are both needed
+    - get all locks upfront and release at end - limit parallelism
 
 ## References
 - [Birrel, Andrew, An Introduction to Programming with Threads.](papers/ud923-birrell-paper.pdf)
